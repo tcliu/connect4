@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Connect 4</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/2.3.3/css/bootstrap-colorpicker.min.css">
+	<style>
+		body { margin-top: 60px; background: #FFFFFF; }
+
+		.svg-container {
+		    display: inline-block;
+		    position: relative;
+		    width: 100%;
+		    padding-bottom: 100%; /* aspect ratio */
+		    vertical-align: top;
+		    overflow: hidden;
+		}
+		.svg-content-responsive {
+		    display: inline-block;
+		    position: absolute;
+		    top: 10px;
+		    left: 0;
+		}
+
+	</style>
+
+</head>
+<body>
+
+	<div class="container" style="max-width: 800px;">
+
+		<!-- Static navbar -->
+		<nav class="navbar navbar-inverse navbar-fixed-top">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="#">Connect 4</a>
+				</div>
+				<div id="navbar" class="navbar-collapse collapse">
+					<ul class="nav navbar-nav">
+						<li id="onePlayer" class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">1 Player <span class="caret"></span></a>
+							<ul class="dropdown-menu">
+								<li><a href="#" data-difficulty="1">Easy</a></li>
+								<li><a href="#" data-difficulty="2">Moderate</a></li>
+								<li><a href="#" data-difficulty="3">Hard</a></li>
+							</ul>
+						</li>
+						<li id="twoPlayers">
+							<a href="#" data-toggle="modal" data-target="#enterNameModal">2 Players</a>
+						</li>
+					</ul>
+				</div><!--/.nav-collapse -->
+			</div><!--/.container-fluid -->
+		</nav>
+
+
+		<div id="board-container">
+			<table style="margin: 0 auto 0 auto; position: relative; left: -20px;">
+				<tr>
+					<td>
+						<svg id="nextPlayerIndicator" width="40" height="50">
+							<circle cx="18" cy="30" r="18" style="fill: rgba(255,255,255,0)"></circle>
+						</svg>
+					</td>
+					<td style="padding-left: 12px;"><h2 id="message"></h2></td>
+				</tr>
+			</table>
+			
+		</div>
+
+	</div> <!-- /container -->
+
+
+	<div class="modal fade" id="enterNameModal" tabindex="-1" role="dialog" aria-labelledby="enterNameLabel">
+	  <div class="modal-dialog" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	        <h4 class="modal-title" id="enterNameLabel">Enter player names</h4>
+	      </div>
+	      <div class="modal-body">
+	        <form class="form-horizontal">
+	          <div class="form-group">
+	            <label for="player1-name" class="control-label col-sm-2">Player 1:</label>
+	            <div class="col-sm-10">
+	            	<div class="input-group">
+	            		<input type="text" class="form-control player-name-input" id="player1-name" />
+	            		<span id="player1-color" class="input-group-addon player-color-input"><i></i></span>
+	            	</div>
+	            </div>
+	          </div>
+	          <div class="form-group">
+	            <label for="player2-name" class="control-label col-sm-2">Player 2:</label>
+	             <div class="col-sm-10">
+	             	<div class="input-group">
+	             		<input type="text" class="form-control player-name-input" id="player2-name">
+						<span id="player2-color" class="input-group-addon player-color-input"><i></i></span>
+	            	</div>
+	            </div>
+	          </div>
+	        </form>
+	      </div>
+	      <div class="modal-footer">
+	        <button id="btnSetPlayerInfo" type="button" class="btn btn-primary" data-dismiss="modal">New game</button>
+	      </div>
+	    </div>
+	  </div>
+	</div><!-- /modal -->
+
+
+	<div class="modal fade" id="restartGameModal" tabindex="-1" role="dialog" aria-labelledby="restartGameLabel">
+	  <div class="modal-dialog" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	        <h4 class="modal-title" id="restartGameLabel"></h4>
+	      </div>
+	      <div class="modal-footer">
+	        <button id="btnRestartGame" type="button" class="btn btn-primary" data-dismiss="modal">Restart game</button>
+	      </div>
+	    </div>
+	  </div>
+	</div><!-- /modal -->
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/2.3.3/js/bootstrap-colorpicker.min.js"></script>
+	<script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<!--
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser-polyfill.min.js"></script>
+	-->
+	<script src="connect4-engine.js"></script>
+	<script src="connect4-ui.js"></script>
+	<script>
+
+	var context = {
+		playerCount: 1,
+		playerNames: ['Player 1'],
+		playerFill:  ['yellow', 'red']
+	};
+
+	function newGame() {
+		if (context.gameUI) {
+			context.gameUI.destroy();
+		}
+		context.game = new Connect4({
+			playerCount: context.playerCount,
+			playerNames: context.playerNames
+		});
+
+		context.gameUI = new Connect4UI(context.game, {
+			container: '#board-container',
+			playerFill: context.playerFill
+		}).on('win', resp => {
+		    $('#restartGameModal').modal();
+		    $('#restartGameModal').on('shown.bs.modal', function (event) {
+		    	$("#restartGameLabel").text(resp.message);
+		    });
+		}).on('message', message => {
+			$("#message").text(message);
+		}).on("nextPlayer", nextPlayer => {
+			d3.selectAll("#nextPlayerIndicator > circle")
+			.style({
+				fill: context.gameUI.playerFill[nextPlayer] ||  context.gameUI.defaultCellFill
+			});
+		});
+		context.gameUI.initialize();
+	}
+
+	$('#onePlayer a[data-difficulty]').on('click', function(e) {
+		context.playerCount = 1;
+		context.difficulty = $(e.target).attr('data-difficulty');
+		console.log('Difficulty changed to ' + context.difficulty);
+		newGame();
+	});
+
+
+	$('#twoPlayers > a').on('click', function(e) {
+		$('#enterNameModal').on('shown.bs.modal', function (event) {
+			if (context.playerNames) {
+		  		$('.player-name-input').each((i, el) => {
+		  			el.value = context.playerNames[i] || 'Player ' + (i+1);
+		  		});
+		  	}
+			if (context.playerFill) {
+				$('.player-color-input').each((i, el) => {
+					$(el)
+					  .attr('data-background', context.playerFill[i])
+					  .css('background', context.playerFill[i]);
+				});
+			}
+		  	$('.player-name-input:eq(0)').focus();
+		}).on('hide.bs.modal', function(e) {
+		  	if (context.playerNames) {
+		  		$('.player-name-input').each((i, el) => {
+		  			el.value = context.playerNames[i] || '';
+		  		});
+		  	}
+		});
+	});
+
+	$('#btnSetPlayerInfo').on('click', function(e) {
+		context.playerCount = 2;
+		context.playerNames = $('.player-name-input').map((i, el) => el.value);
+		context.playerFill = $('.player-color-input').map((i, el) => $(el).attr('data-background'));
+		newGame();
+	});
+
+    $('.player-color-input').colorpicker().on('changeColor', function(e) {
+    	var c = e.color.toHex();
+    	$(e.target).attr('data-background', c).css('background', c);
+    });
+
+    $('#btnRestartGame').on('click', newGame);
+
+	newGame();
+	</script>
+</body>
+</html>
