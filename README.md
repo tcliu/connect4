@@ -1,8 +1,11 @@
 # Connect 4
 
-There are 3 ways to launch the application:
+There are 3 ways to launch the web application:
 
-- Copy the following files to a local directory and open connect4.html.
+- Copy the following files to a local directory and open connect4.html using Chrome (Desktop / Mobile) / Firefox / IE Edge
+  - connect4.html
+  - connect4-engine.js
+  - connect4-ui.js
 - Launch a simple web server using the following command and access http://localhost:1000
 ```sh
 git clone 
