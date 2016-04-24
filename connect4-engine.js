@@ -53,15 +53,13 @@ class Connect4 {
 		if (colIndex >= 0 && colIndex <= this.cols - 1 && this.getWinner() == null) {
 			var nextRowIndex = this.getNextRow(colIndex);
 			if (nextRowIndex >= 0) {
-				var cellIndex = this.getCellIndex(nextRowIndex, colIndex);
 				var nextPlayerId = this.getNextPlayerId();
 				var move = new Move(nextPlayerId, nextRowIndex, colIndex);
+				if (this._getMaxLength(nextPlayerId, nextRowIndex, colIndex) >= this.winLength)
+					move.winning = true;
 				this.moves.push(move);
 				this.setCell(nextRowIndex, colIndex, nextPlayerId);
 				this.nextRows[colIndex] = nextRowIndex - 1;
-				if (this.isWinningMove(move)) {
-					move.winning = true;
-				}
 				return move;
 			}
 		}
@@ -72,14 +70,33 @@ class Connect4 {
 	 * Determines which column should the piece be dropped
 	 */
 	determineColumn(player) {
-		// random move
-		var filteredCols = [];
-		this.nextRows.forEach((r, i) => {
-			if (r != -1)
-				filteredCols.push(i);
+		var col;
+		var maxLens = this.players.map((p, i) => {
+			return this.nextRows.map((r, c) => {
+				return r != -1 ? this._getMaxLength(p.id, r, c) : 0;
+			});
 		});
-		var pickedCol = Math.floor(Math.random() * filteredCols.length);
-		return pickedCol;
+		col = maxLens[player.id].findIndex(len => len >= this.winLength);
+		if (col != -1) {
+			return col; // picks the winning move
+		}
+		for (var i=0; i<this.players.length; i++) {
+			var p = this.players[i];
+			if (p != player) {
+				col = maxLens[p.id].findIndex(len => len >= this.winLength);
+				if (col != -1) {
+					return col; // blocks another player's winning move
+				}
+				if (player.ai >= 2) { // for Moderate or above
+					col = maxLens[p.id].findIndex(len => len >= this.winLength - 1);
+					if (col != -1) {
+						return col; // blocks another player's threat
+					}
+				}
+			}
+		}
+		col = this._getIndexOfMax(maxLens[player.id]);
+		return col;
 	}
 
 	/**
@@ -93,34 +110,6 @@ class Connect4 {
 			return move;
 		}
 		return null;
-	}
-
-	/**
-	 * Checks if a move is winning
-	 */
-	isWinningMove(move) {
-		var c, cell;
-		// row check
-		c = 1;
-		for (var d=-1; move.colIndex+d>=0 && this.getCell(move.rowIndex, move.colIndex+d) == move.playerId; d--) c++;
-		for (var d=1; move.colIndex+d<=this.cols-1 && this.getCell(move.rowIndex, move.colIndex+d) == move.playerId; d++) c++;
-		if (c >= this.winLength) return true;
-		// column check
-		c = 1;
-		for (var d=-1; move.rowIndex+d>=0 && this.getCell(move.rowIndex+d, move.colIndex) == move.playerId; d--) c++;
-		for (var d=1; move.rowIndex+d<=this.rows-1 && this.getCell(move.rowIndex+d, move.colIndex) == move.playerId; d++) c++;
-		if (c >= this.winLength) return true;
-		// diagonal check #1 (top-right to bottom-left)
-		c = 1;
-		for (var d=1; move.rowIndex+d<=this.rows-1 && move.colIndex-d>=0 && this.getCell(move.rowIndex+d, move.colIndex-d) == move.playerId; d++) c++;
-		for (var d=1; move.rowIndex-d>=0 && move.colIndex+d<=this.cols-1 && this.getCell(move.rowIndex-d, move.colIndex+d) == move.playerId; d++) c++;
-		if (c >= this.winLength) return true;
-		// diagonal check #2 (top-left to bottom-right)
-		c = 1;
-		for (var d=1; move.rowIndex-d>=0 && move.colIndex-d>=0 && this.getCell(move.rowIndex-d, move.colIndex-d) == move.playerId; d++) c++;
-		for (var d=1; move.rowIndex+d<=this.rows-1 && move.colIndex+d<=this.cols-1 && this.getCell(move.rowIndex+d, move.colIndex+d) == move.playerId; d++) c++;
-		if (c >= this.winLength) return true;
-		return false;
 	}
 
 	/**
@@ -191,6 +180,58 @@ class Connect4 {
 			stream.write('\n');
 		}
 
+	}
+
+	/**
+	 * Gets the maximum length obtained for a move
+	 */
+	_getMaxLength(playerId, rowIndex, colIndex) {
+		var c, lens = [];
+		// row check
+		c = 1;
+		for (var d=-1; colIndex+d>=0 && this.getCell(rowIndex, colIndex+d) == playerId; d--) c++;
+		for (var d=1; colIndex+d<=this.cols-1 && this.getCell(rowIndex, colIndex+d) == playerId; d++) c++;
+		lens.push(c);
+		// column check
+		c = 1;
+		for (var d=-1; rowIndex+d>=0 && this.getCell(rowIndex+d, colIndex) == playerId; d--) c++;
+		for (var d=1; rowIndex+d<=this.rows-1 && this.getCell(rowIndex+d, colIndex) == playerId; d++) c++;
+		lens.push(c);
+		// diagonal check #1 (top-right to bottom-left)
+		c = 1;
+		for (var d=1; rowIndex+d<=this.rows-1 && colIndex-d>=0 && this.getCell(rowIndex+d, colIndex-d) == playerId; d++) c++;
+		for (var d=1; rowIndex-d>=0 && colIndex+d<=this.cols-1 && this.getCell(rowIndex-d, colIndex+d) == playerId; d++) c++;
+		lens.push(c);
+		// diagonal check #2 (top-left to bottom-right)
+		c = 1;
+		for (var d=1; rowIndex-d>=0 && colIndex-d>=0 && this.getCell(rowIndex-d, colIndex-d) == playerId; d++) c++;
+		for (var d=1; rowIndex+d<=this.rows-1 && colIndex+d<=this.cols-1 && this.getCell(rowIndex+d, colIndex+d) == playerId; d++) c++;
+		lens.push(c);
+		return Math.max(...lens);
+	}
+
+	/**
+	 * Checks if a move is winning
+	 */
+	_isWinningMove(playerId, rowIndex, colIndex, winLength) {
+		return this._getMaxLength(playerId, rowIndex, colIndex) >= this.winLength;
+	}
+
+	/**
+	 * Gets the index of the maximum value in an array
+	 */
+	_getIndexOfMax(arr) {
+		if (arr.length > 0) {
+			var maxIndex = 0, max = arr[0];
+			for (var i=1; i<=arr.length; i++) {
+				if (arr[i] > max) {
+					max = arr[i];
+					maxIndex = i;
+				}
+			}
+			return maxIndex;
+		}
+		return -1;
 	}
 
 }

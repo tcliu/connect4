@@ -11,11 +11,12 @@ class Connect4UI {
 
 	initialize() {
 		var self = this;
+		this.cellBorder = this.cellRadius * this.cellBorderRatio;
 		this.cellWidth = (this.cellRadius + this.cellBorder) * 2;
 		this.boardWidth = this.game.cols * this.cellWidth + this.cellBorder * 2;
 		this.boardHeight = this.game.rows * this.cellWidth + this.cellBorder * 2;
 		this.viewBoxWidth = this.boardWidth;
-		this.viewBoxHeight = this.boardHeight + 50;
+		this.viewBoxHeight = this.boardHeight;
 
 		this.svgContainer = d3.select(this.container)
 		   .append('div')
@@ -27,8 +28,43 @@ class Connect4UI {
 		   .attr('preserveAspectRatio', 'xMinYMin meet')
 		   .attr('viewBox', `0 0 ${this.viewBoxWidth} ${this.viewBoxHeight}`)
 		   //class to make it responsive
-		   .classed('svg-content-responsive', true)
-		   .on('click', function(e) {
+		   .classed('connect4ui svg-content-responsive', true);
+
+		var mask = svg.append('defs')
+			.append('mask').attr({id: 'game-board-mask'});
+		mask.append('rect').attr({
+			width: '100%',
+			height: '100%',
+			fill: '#FFFFFF'
+		})
+		mask.selectAll('circle')
+			.data(Array(this.game.rows * this.game.cols))
+			.enter().append('circle')
+			.attr({
+				cx: (d, i) => (i % this.game.cols) * this.cellWidth + this.cellRadius + this.cellBorder * 2,
+				cy: (d, i) => Math.floor(i/this.game.cols) * this.cellWidth + this.cellRadius + this.cellBorder * 2,
+				r: this.cellRadius,
+				fill: '#000000'
+			});
+
+		this.pieceGroup = svg.append('g').classed('piece-group', true);
+
+		svg.append('rect')
+			.attr({
+				class: 'gameboard'
+			})
+			.attr({
+				width: this.boardWidth, 
+				height: this.boardHeight,
+				rx: this.cellBorder,
+				ry: this.cellBorder,
+				fill: this.boardFill
+			})
+			.style({
+				mask: 'url(#game-board-mask)',
+				cursor: 'pointer'
+			})
+			.on('click', function(e) {
 		   		var coord = d3.mouse(this),
 		   			scaledX = (coord[0] - self.cellBorder) / self.cellWidth,
 		   			colIndex = Math.floor(scaledX),
@@ -39,66 +75,50 @@ class Connect4UI {
 		   		}
 		   	});
 
-		var boardGroup = svg.append('g');
-
-		var rect = boardGroup.append('rect')
-			.attr({
-				width: this.boardWidth, 
-				height: this.boardHeight,
-				rx: this.cellBorder,
-				ry: this.cellBorder
-			})
-			.style({
-				fill: this.boardFill
-			});
-
-
-		this.cells = boardGroup.selectAll('circle')
-			.data(Array(this.game.rows * this.game.cols))
-			.enter().append('circle')
-			.attr({
-				id: (d, i) => i,
-				cx: (d, i) => (i % this.game.cols) * this.cellWidth + this.cellRadius + this.cellBorder * 2,
-				cy: (d, i) => Math.floor(i/this.game.cols) * this.cellWidth + this.cellRadius + this.cellBorder * 2,
-				r: this.cellRadius
-			})
-			.style({
-				fill: this.emptyCellFill,
-				cursor: 'pointer'
-			});
-
 		var nextPlayerId = this.game.getNextPlayerId();
 		this._publishEvent('message', this._getNextPlayerMessage(nextPlayerId));
 		this._publishEvent('nextPlayer', nextPlayerId);
-		return
+		return this;
 	}
 
 	dropPiece(colIndex) {
-		var move = this.game.dropPiece(colIndex);
-		if (move) {
-			var cellIndex = this.game.getCellIndex(move.rowIndex, move.colIndex);
-			this.cells
-				.filter((d, i) => i == cellIndex)
-				.style({
-					fill: this.playerFill[move.playerId] || this.defaultCellFill
-				});
-			this._publishEvent('move', move);
-			if (move.winning) {
-				var message = this._getWinMessage(move.playerId);
-				this._publishEvent('message', message);
-				this._publishEvent('win', {move: move, message: message});
+		if (!this.moving) {
+			var move = this.game.dropPiece(colIndex);
+			if (move) {
+				this.moving = true;
+				var cellIndex = this.game.getCellIndex(move.rowIndex, move.colIndex);
+				var pieces = this.pieceGroup
+					.append('circle')
+					.attr({
+						class: 'piece',
+						cx: move.colIndex * this.cellWidth + this.cellRadius + this.cellBorder * 2,
+						cy: move.rowIndex * this.cellWidth + this.cellRadius + this.cellBorder * 2,
+						r: this.cellRadius,
+						fill: this.playerFill[move.playerId]
+					});
+				setTimeout(() => {
+					this.moving = false;
+					if (move.winning) {
+						var message = this._getWinMessage(move.playerId);
+						this._publishEvent('move', move, message);
+						this._publishEvent('message', message);
+					} else {
+						var nextPlayer = this.game.getNextPlayer();
+						var message = this._getNextPlayerMessage(nextPlayer.id);
+						this._publishEvent('move', move, message);
+						this._publishEvent('message', message);
+						this._publishEvent('nextPlayer', nextPlayer.id);
+						if (nextPlayer.ai > 0) {
+							var col = this.game.determineColumn(nextPlayer);
+							this.dropPiece(col);
+						}
+					}
+				}, this.moveDuration);
+				
 			} else {
-				var nextPlayer = this.game.getNextPlayer();
-				this._publishEvent('message', this._getNextPlayerMessage(nextPlayer.id));
-				this._publishEvent('nextPlayer', nextPlayer.id);
-				if (nextPlayer.ai > 0) {
-					this.dropPiece(this.game.determineColumn(nextPlayer));
-				}
+				console.log('Invalid move.');
 			}
-		} else {
-			console.log('Invalid move.');
 		}
-
 	}
 
 	on(eventName, callback) {
@@ -107,15 +127,17 @@ class Connect4UI {
 	}
 
 	destroy() {
-		this.cells.remove();
 		this.svgContainer.remove();
+		this.svgContainer = null;
+		this.pieceGroup = null;
 	}
 
-	_publishEvent(eventName, obj) {
+	_publishEvent(eventName, ...obj) {
 		if (this.eventListeners[eventName]) {
-			this.eventListeners[eventName].call(this, obj);
+			this.eventListeners[eventName].call(this, ...obj);
 		}
 	}
+
 
 	_getNextPlayerMessage(nextPlayerId) {
 		if (this.game.playerCount == 1 && nextPlayerId == 0) {
@@ -141,7 +163,8 @@ Connect4UI.defaultConfig = {
 	emptyCellFill: '#FFFFFF',
 	defaultCellFill: '#808080',
 	playerFill: ['yellow', 'red'],
-	cellRadius: 28,
-	cellBorder: 7,
+	cellRadius: 20,
+	cellBorderRatio: 0.25,
+	moveDuration: 400,
 	sensitivity: 0.75
 };
