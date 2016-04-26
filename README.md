@@ -10,10 +10,12 @@ cd <any local folder>
 git clone https://github.com/tcliu/connect4.git
 cd connect4
 ```
-- Start a simple web server using the following command and access http://localhost:1000 using Chrome (Desktop / Mobile), Firefox or IE Edge.
+- Install npm modules, bower packages and start a simple web server with a specific port (default = 8000) using the following command:
 ```sh
 npm install
-node server.js
+bower install
+node server.js <port>
 ```
-- Alternatively, the game can also be accessed directly at https://plnkr.co/edit/4TuNkG9fZ88h9Vcppng4?p=preview.
+- Access http://localhost:port using latest Chrome (Desktop / Mobile), Firefox or IE Edge.
 
+- Alternatively, the game can also be accessed directly at https://run.plnkr.co/plunks/Sqh8OQD4jDQGhPHlyXCE/

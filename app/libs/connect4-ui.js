@@ -1,16 +1,23 @@
 'use strict';
 
-class Connect4UI {
+/**
+ * User interface for Connect 4
+ */
+const Connect4UI = {
 
-	constructor(game, config) {
-		Object.assign(this, {
-			game: game,
-			eventListeners: []
-		}, Connect4UI.defaultConfig, config);
-	}
+	boardFill: '#3C2807',
+	emptyCellFill: '#FFFFFF',
+	defaultCellFill: '#808080',
+	playerFill: ['yellow', 'red'],
+	cellRadius: 20,
+	cellBorderRatio: 0.25,
+	moveDuration: 400,
+	sensitivity: 0.75,
 
-	initialize() {
+	init: function(config) {
+		Object.assign(this, config);
 		var self = this;
+
 		this.cellBorder = this.cellRadius * this.cellBorderRatio;
 		this.cellWidth = (this.cellRadius + this.cellBorder) * 2;
 		this.boardWidth = this.game.cols * this.cellWidth + this.cellBorder * 2;
@@ -79,9 +86,9 @@ class Connect4UI {
 		this._publishEvent('message', this._getNextPlayerMessage(nextPlayerId));
 		this._publishEvent('nextPlayer', nextPlayerId);
 		return this;
-	}
+	},
 
-	dropPiece(colIndex) {
+	dropPiece: function(colIndex) {
 		if (!this.moving) {
 			var move = this.game.dropPiece(colIndex);
 			if (move) {
@@ -119,36 +126,38 @@ class Connect4UI {
 				console.log('Invalid move.');
 			}
 		}
-	}
+	},
 
-	on(eventName, callback) {
+	on: function(eventName, callback) {
+		if (!this.eventListeners) {
+			this.eventListeners = [];
+		}
 		this.eventListeners[eventName] = callback;
 		return this;
-	}
+	},
 
-	destroy() {
+	destroy: function() {
 		this.svgContainer.remove();
 		this.svgContainer = null;
 		this.pieceGroup = null;
-	}
+	},
 
-	_publishEvent(eventName, ...obj) {
+	_publishEvent: function(eventName, ...obj) {
 		if (this.eventListeners[eventName]) {
 			this.eventListeners[eventName].call(this, ...obj);
 		}
-	}
+	},
 
-
-	_getNextPlayerMessage(nextPlayerId) {
+	_getNextPlayerMessage: function(nextPlayerId) {
 		if (this.game.playerCount == 1 && nextPlayerId == 0) {
 			return 'Your turn';
 		} else {
 			var player = this.game.players[nextPlayerId];
 			return `${player.name}'s turn`;
 		}
-	}
+	},
 
-	_getWinMessage(winnerId) {
+	_getWinMessage: function(winnerId) {
 		if (this.game.playerCount == 1 && winnerId == 0) {
 			return 'You win!';
 		} else {
@@ -157,14 +166,8 @@ class Connect4UI {
 		}
 	}
 
-}
-Connect4UI.defaultConfig = {
-	boardFill: '#3C2807',
-	emptyCellFill: '#FFFFFF',
-	defaultCellFill: '#808080',
-	playerFill: ['yellow', 'red'],
-	cellRadius: 20,
-	cellBorderRatio: 0.25,
-	moveDuration: 400,
-	sensitivity: 0.75
 };
+
+if (typeof module !== 'undefined') {
+	module.exports = Connect4UI;
+}

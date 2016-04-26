@@ -1,42 +1,38 @@
 'use strict';
 
-class Player {
+/**
+ * Game engine of Connect 4
+ */
+const Connect4 = {
 
-	constructor(id, name, ai) {
-		this.id = id;
-		this.name = name;
-		this.ai = ai;
-	}
-}
+	playerCount: 1,  // number of players
+	playerNames: [], // player names
+	difficulty: 2, 	 // difficulty (0 - human mode, 1 - easy, 2 - moderate, 3 - hard)
+	firstPlayer: 0,  // the id of the player who takes the first move
+	rows: 6,         // the number of rows in the game board
+	cols: 7,		 // the number of columns in the game board
+	winLength: 4,    // the number of consecutive pieces which form a winning move
 
-class Move {
+	Player: Player,
+	Move: Move,
 
-	constructor(playerId, rowIndex, colIndex) {
-		this.playerId = playerId;
-		this.rowIndex = rowIndex;
-		this.colIndex = colIndex;
-		this.winning = false;
-	}
-}
-
-class Connect4 {
-
-	constructor(gameConfig) {
+	init: function(gameConfig) {		
 		Object.assign(this, {
-			cells: [],
-			moves: [],
-			nextRows: []
-		}, Connect4.defaultConfig, gameConfig);
+			cells: [],		 // cells
+			moves: [],		 // moves
+			nextRows: []	 // the next available rows for each column
+		}, gameConfig);
 		for (var i=0; i<this.cols; i++) {
 			this.nextRows[i] = this.rows - 1;
 		}
 		this.initPlayers();
-	}
+		return this;
+	},
 
 	/**
 	 * Initializes players
 	 */
-	initPlayers() {
+	initPlayers: function() {
 		this.players = [];
 		for (var i=0; i<this.playerCount; i++) {
 			this.players[i] = new Player(i, this.playerNames[i] || 'Player ' + (i + 1), 0);
@@ -44,12 +40,12 @@ class Connect4 {
 		if (this.playerCount == 1) {
 			this.players[1] = new Player(1, 'Computer', this.difficulty);
 		}
-	}
+	},
 
 	/** 
 	 * Drops a piece and returns the move info
 	 */
-	dropPiece(colIndex) {
+	dropPiece: function(colIndex) {
 		if (colIndex >= 0 && colIndex <= this.cols - 1 && this.getWinner() == null) {
 			var nextRowIndex = this.getNextRow(colIndex);
 			if (nextRowIndex >= 0) {
@@ -64,12 +60,12 @@ class Connect4 {
 			}
 		}
 		return null;
-	}
+	},
 
 	/**
 	 * Determines which column should the piece be dropped
 	 */
-	determineColumn(player) {
+	determineColumn: function(player) {
 		var col;
 		var maxLens = this.players.map((p, i) => {
 			return this.nextRows.map((r, c) => {
@@ -97,12 +93,12 @@ class Connect4 {
 		}
 		col = this._getIndexOfMax(maxLens[player.id]);
 		return col;
-	}
+	},
 
 	/**
 	 * Reverts the last move and returns the move info
 	 */
-	revert() {
+	revert: function() {
 		if (this.moves.length > 0) {
 			var move = this.moves.splice(-1, 1)[0];
 			this.nextRows[move.colIndex]--;
@@ -110,55 +106,55 @@ class Connect4 {
 			return move;
 		}
 		return null;
-	}
+	},
 
 	/**
 	 * Sets the player who occupies a cell
 	 */
-	setCell(rowIndex, colIndex, playerId) {
+	setCell: function(rowIndex, colIndex, playerId) {
 		this.cells[this.getCellIndex(rowIndex, colIndex)] = playerId;
-	}
+	},
 
 	/**
 	 * Gets the player who occupies a cell
 	 */
-	getCell(rowIndex, colIndex) {
+	getCell: function(rowIndex, colIndex) {
 		return this.cells[this.getCellIndex(rowIndex, colIndex)];
-	}
+	},
 
 	/**
 	 * Gets the index of the next available row for a column
 	 */
-	getNextRow(colIndex) {
+	getNextRow: function(colIndex) {
 		var rowIndex = this.nextRows[colIndex];
 		return rowIndex != null ? rowIndex : this.rows - 1;
-	}
+	},
 
 	/**
 	 * Gets the next player ID
 	 */
-	getNextPlayerId() {
+	getNextPlayerId: function() {
 		return this.moves.length > 0 ? (this.moves[this.moves.length - 1].playerId + 1) % this.players.length : this.firstPlayer;
-	}
+	},
 
 	/**
 	 * Gets the next player
 	 */
-	getNextPlayer() {
+	getNextPlayer: function() {
 		return this.players[this.getNextPlayerId()];
-	}
+	},
 
 	/**
 	 * Gets the cell index
 	 */
-	getCellIndex(rowIndex, colIndex) {
+	getCellIndex: function(rowIndex, colIndex) {
 		return rowIndex * this.cols + colIndex;
-	}
+	},
 
 	/**
 	 * Gets the winner of the game, or null if the game has not ended
 	 */
-	getWinner() {
+	getWinner: function() {
 		if (this.moves.length > 0) {
 			var lastMove = this.moves[this.moves.length - 1];
 			if (lastMove.winning) {
@@ -166,12 +162,12 @@ class Connect4 {
 			}
 		}
 		return null;
-	}
+	},
 
 	/**
 	 * Renders the game board
 	 */
-	render(stream) {
+	render: function(stream) {
 		for (var i=0; i<this.rows; i++) {
 			for (var j=0; j<this.cols; j++) {
 				var c = this.getCell(i, j);
@@ -180,12 +176,12 @@ class Connect4 {
 			stream.write('\n');
 		}
 
-	}
+	},
 
 	/**
 	 * Gets the maximum length obtained for a move
 	 */
-	_getMaxLength(playerId, rowIndex, colIndex) {
+	_getMaxLength: function(playerId, rowIndex, colIndex) {
 		var c, lens = [];
 		// row check
 		c = 1;
@@ -208,19 +204,19 @@ class Connect4 {
 		for (var d=1; rowIndex+d<=this.rows-1 && colIndex+d<=this.cols-1 && this.getCell(rowIndex+d, colIndex+d) == playerId; d++) c++;
 		lens.push(c);
 		return Math.max(...lens);
-	}
+	},
 
 	/**
 	 * Checks if a move is winning
 	 */
-	_isWinningMove(playerId, rowIndex, colIndex, winLength) {
+	_isWinningMove: function(playerId, rowIndex, colIndex, winLength) {
 		return this._getMaxLength(playerId, rowIndex, colIndex) >= this.winLength;
-	}
+	},
 
 	/**
 	 * Gets the index of the maximum value in an array
 	 */
-	_getIndexOfMax(arr) {
+	_getIndexOfMax: function(arr) {
 		if (arr.length > 0) {
 			var maxIndex = 0, max = arr[0];
 			for (var i=1; i<=arr.length; i++) {
@@ -234,28 +230,21 @@ class Connect4 {
 		return -1;
 	}
 
-}
-
-Connect4.defaultConfig = {
-	playerCount: 1,  // number of players
-	playerNames: [], // player names
-	difficulty: 2, 	 // difficulty (0 - human mode, 1 - easy, 2 - moderate, 3 - hard)
-	firstPlayer: 0,  // the id of the player who takes the first move
-	rows: 6,         // the number of rows in the game board
-	cols: 7,		 // the number of columns in the game board
-	winLength: 4     // the number of consecutive pieces which form a winning move
 };
 
-function test() {
-	var game = new Connect4({
-		playerCount: 2, 
-		difficulty: 1 // easy mode
-	});
-	game.dropPiece(0);
-	game.dropPiece(1);
-	game.dropPiece(2);
-	if (typeof process !== 'undefined') {
-		game.render(process.stdout);
-	}
-	console.log(game);
+function Player(id, name, ai) {
+	this.id = id;
+	this.name = name;
+	this.ai = ai;
+}
+
+function Move(playerId, rowIndex, colIndex) {
+	this.playerId = playerId;
+	this.rowIndex = rowIndex;
+	this.colIndex = colIndex;
+	this.winning = false;
+}
+
+if (typeof module !== 'undefined') {
+	module.exports = Connect4;
 }

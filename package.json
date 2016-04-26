@@ -1,5 +1,30 @@
 {
+  "name": "connect4",
+  "version": "1.0.2",
+  "description": "Web-based implementation of classic Connect 4 game",
+  "main": "connect4.js",
   "dependencies": {
-    "express": "^4.13.4"
-  }
+    "express": "^4.13.4",
+    "react": "^15.0.1",
+    "react-dom": "^15.0.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tcliu/connect4.git"
+  },
+  "engines": {
+    "node": ">=5.7.0",
+    "npm": ">=3.8.7"
+  },
+  "author": "tcliu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tcliu/connect4/issues"
+  },
+  "homepage": "https://github.com/tcliu/connect4#readme"
 }

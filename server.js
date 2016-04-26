@@ -1,6 +1,6 @@
 'use strict';
 
-const port = process.argv[2] || 1000;
+const port = process.argv[2] || 8000;
 const express = require('express');
 const app = express();
 
@@ -12,5 +12,5 @@ app.get('/', function(req, res) {
 app.use(express.static('.'));
 
 app.listen(port, () => {
-	console.log('Example app listening on port ' + port + '!');
+	console.log('Server listening on port ' + port + ' ...');
 });
