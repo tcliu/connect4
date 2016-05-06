@@ -72,6 +72,8 @@ gulp.task('audio', function() {
 		.pipe(gulp.dest('public/audio'));
 });
 
+gulp.task('build', ['html', 'sass', 'audio', 'browserify']);
+
 gulp.task('serve', ['html', 'sass', 'audio', 'watchify'], function() {
     browserSync.init({
         server: "./public",
