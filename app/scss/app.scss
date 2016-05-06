@@ -1,0 +1,48 @@
+body { margin-top: 60px; background: #FFFFFF; }
+
+.container {
+    max-width: 800px;
+}
+
+.svg-container {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%; /* aspect ratio */
+    vertical-align: top;
+    overflow: hidden;
+}
+.svg-content-responsive {
+    display: inline-block;
+    position: absolute;
+    top: 10px;
+    left: 0;
+}
+
+@keyframes piece {
+	0% { cy: 0px; }
+}
+
+.connect4ui .piece { 
+	animation: piece 400ms;
+}
+
+#board-container > table { margin: 0 auto 0 auto; position: relative; left: -20px; }
+#board-container .messageCell { padding-left: 12px; }
+
+#board-container .nextPlayerIndicator {background: #FFFFFF;}
+
+.board-colour-input { width: 30px; height: 30px; left: -30px; position: relative; cursor: pointer; }
+.player-color-input { cursor: pointer; }
+
+.times { margin: 0; padding: 0; width: 1%; }
+
+.board-colour-picker { width: 30px; height: 30px; background-color: #CCCCCC; cursor: pointer; }
+.player-colour-picker { cursor: pointer; }
+
+.form-control-board-size-item { float: left; display: block; }
+input.form-control-board-size-item { width: 25%; }
+div.form-control-board-size-item { margin: 5px 8px 0 8px; }
+
+.gameboard { cursor: pointer; }
+.gameboard.moving { cursor: default; }

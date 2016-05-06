@@ -4,6 +4,11 @@ This project demonstrates a web based implementation of Connect Four (or 4 in a 
 
 - Install [Git](https://git-scm.com/) and [NodeJS](https://nodejs.org) 
 
+- Install bower
+```sh
+npm install -g bower
+```
+
 - Clone this repository to a local directory using the following commands:
 ```sh
 cd <any local folder>
@@ -16,6 +21,4 @@ npm install
 bower install
 node server.js <port>
 ```
-- Access http://localhost:port using latest Chrome (Desktop / Mobile), Firefox or IE Edge.
-
-- Alternatively, the game can also be accessed directly at https://run.plnkr.co/plunks/Sqh8OQD4jDQGhPHlyXCE/
+- Access http://localhost:<port> using latest Chrome (Desktop / Mobile), Firefox or IE Edge.

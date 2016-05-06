@@ -6,10 +6,10 @@ const app = express();
 
 // respond with "hello world" when a GET request is made to the homepage
 app.get('/', function(req, res) {
-	res.redirect('/connect4.html');
+	res.redirect('/index.html');
 });
 
-app.use(express.static('.'));
+app.use(express.static('./public'));
 
 app.listen(port, () => {
 	console.log('Server listening on port ' + port + ' ...');

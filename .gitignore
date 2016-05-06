@@ -1,3 +1,4 @@
 # ignore list
 node_modules
+public
 bower_components

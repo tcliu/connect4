@@ -51,11 +51,15 @@ const Connect4 = {
 			if (nextRowIndex >= 0) {
 				var nextPlayerId = this.getNextPlayerId();
 				var move = new Move(nextPlayerId, nextRowIndex, colIndex);
-				if (this._getMaxLength(nextPlayerId, nextRowIndex, colIndex) >= this.winLength)
-					move.winning = true;
+				if (this._getMaxLength(nextPlayerId, nextRowIndex, colIndex) >= this.winLength) {
+					move.status = 'win';
+				}
 				this.moves.push(move);
 				this.setCell(nextRowIndex, colIndex, nextPlayerId);
 				this.nextRows[colIndex] = nextRowIndex - 1;
+				if (move.status != 'win' && this.nextRows.reduce((a,b) => a && b == -1, true)) {
+					move.status = 'draw';
+				}
 				return move;
 			}
 		}
@@ -131,10 +135,18 @@ const Connect4 = {
 	},
 
 	/**
-	 * Gets the next player ID
+	 * Gets the next player ID, or the current player ID if the game has ended
 	 */
 	getNextPlayerId: function() {
-		return this.moves.length > 0 ? (this.moves[this.moves.length - 1].playerId + 1) % this.players.length : this.firstPlayer;
+		if (this.moves.length > 0) {
+			var lastMove = this.moves[this.moves.length - 1];
+			if (lastMove.status == 'win' || lastMove.status == 'draw') {
+				return lastMove.playerId;
+			}
+			return (lastMove.playerId + 1) % this.players.length;
+		} else {
+			return this.firstPlayer;
+		}
 	},
 
 	/**
@@ -157,11 +169,18 @@ const Connect4 = {
 	getWinner: function() {
 		if (this.moves.length > 0) {
 			var lastMove = this.moves[this.moves.length - 1];
-			if (lastMove.winning) {
-				return lastMove.playerId;
+			if (lastMove.status == 'win') {
+				return this.players[lastMove.playerId];
 			}
 		}
 		return null;
+	},
+
+	/**
+	 * Checks if the game is a draw.
+	 */
+	isDraw: function() {
+		return this.moves.length > 0 && this.moves[this.moves.length - 1].status == 'draw';
 	},
 
 	/**
@@ -242,9 +261,7 @@ function Move(playerId, rowIndex, colIndex) {
 	this.playerId = playerId;
 	this.rowIndex = rowIndex;
 	this.colIndex = colIndex;
-	this.winning = false;
+	this.status = 'next';
 }
 
-if (typeof module !== 'undefined') {
-	module.exports = Connect4;
-}
+module.exports = Connect4;
