@@ -1,4 +1,4 @@
-# Connect Four
+# Connect 4
 
 This project demonstrates a web based implementation of Connect Four (or 4 in a Row) game. Here are the procedures to access the game.
 
@@ -15,10 +15,12 @@ cd <any local folder>
 git clone https://github.com/tcliu/connect4.git
 cd connect4
 ```
-- Install npm modules, bower packages and start a simple web server with a specific port (default = 8000) using the following command:
+- Install npm modules and bower packages
 ```sh
 npm install
 bower install
-node server.js <port>
 ```
-- Access http://localhost:<port> using latest Chrome (Desktop / Mobile), Firefox or IE Edge.
+- Start a simple web server with browser synchronization capability:
+```sh
+npm run serve
+```
