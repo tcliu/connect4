@@ -72,7 +72,7 @@ module.exports = React.createClass({
 						var nextPlayer = g.getNextPlayer();
 						if (nextPlayer.ai > 0) {
 							var col = g.determineColumn(nextPlayer);
-							this.dropPiece(null, col);
+							this.dropPiece(e, col);
 						}
 					}
 				}, this.get('moveDuration'));
@@ -82,8 +82,7 @@ module.exports = React.createClass({
 	},
 
 	render: function() {
-		var g = this.props.game;
-		var boardDim = this.getBoardDimension();
+		var g = this.props.game, boardDim = this.getBoardDimension();
 		return (
 			<div id="board-container">
 				<div className="svg-container">

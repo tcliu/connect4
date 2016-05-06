@@ -70,32 +70,36 @@ const Connect4 = {
 	 * Determines which column should the piece be dropped
 	 */
 	determineColumn: function(player) {
-		var col;
 		var maxLens = this.players.map((p, i) => {
 			return this.nextRows.map((r, c) => {
 				return r != -1 ? this._getMaxLength(p.id, r, c) : 0;
 			});
 		});
-		col = maxLens[player.id].findIndex(len => len >= this.winLength);
-		if (col != -1) {
-			return col; // picks the winning move
-		}
-		for (var i=0; i<this.players.length; i++) {
+		var col = maxLens[player.id].findIndex(len => len >= this.winLength);
+		for (var i=0; col == -1 && i<this.players.length; i++) {
 			var p = this.players[i];
 			if (p != player) {
 				col = maxLens[p.id].findIndex(len => len >= this.winLength);
-				if (col != -1) {
-					return col; // blocks another player's winning move
-				}
-				if (player.ai >= 2) { // for Moderate or above
-					col = maxLens[p.id].findIndex(len => len >= this.winLength - 1);
-					if (col != -1) {
-						return col; // blocks another player's threat
-					}
-				}
 			}
 		}
-		col = this._getIndexOfMax(maxLens[player.id]);
+		if (col == -1) {
+			var maxLenTotals = this.nextRows.map((r, c) => {
+				return this.players.reduce((a,p) => a + maxLens[p.id][c], 0);
+			});
+			var maxLenIndex = 0, maxLen = maxLens[player.id][0], maxLenTotal = maxLenTotals[0];
+			for (var i=1; i<this.cols; i++) {
+				var updateMax = maxLens[player.id][i] > maxLen 
+					|| (player.ai >= 2 && maxLens[player.id][i] == maxLen && maxLenTotals[i] > maxLenTotal)
+					|| (player.ai >= 3 && maxLens[player.id][i] == maxLen && maxLenTotals[i] == maxLenTotal 
+						&& Math.abs(Math.floor(this.cols / 2) - i) < Math.abs(Math.floor(this.cols / 2) - maxLenIndex));
+				if (updateMax) {
+					maxLen = maxLens[player.id][i];
+					maxLenTotal = maxLenTotals[i];
+					maxLenIndex = i;
+				}
+			}
+			return maxLenIndex;
+		}
 		return col;
 	},
 
